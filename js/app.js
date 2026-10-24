@@ -38,3 +38,33 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
+
+// 自定义「安装到主屏」按钮（利用 PWA 的 beforeinstallprompt）
+let deferredInstall = null;
+const installBar = document.getElementById('install-bar');
+const installBtn = document.getElementById('install-btn');
+const installDismiss = document.getElementById('install-dismiss');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+  if (installBar) installBar.hidden = false;
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstall = null;
+  if (installBar) installBar.hidden = true;
+});
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    deferredInstall = null;
+    if (installBar) installBar.hidden = true;
+  });
+}
+if (installDismiss) {
+  installDismiss.addEventListener('click', () => {
+    if (installBar) installBar.hidden = true;
+  });
+}
